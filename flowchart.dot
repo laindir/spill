@@ -1,0 +1,13 @@
+digraph {
+	label="Spill"
+	read -> readblock;
+	readblock -> readsub[label="yes"];
+	readsub -> poll;
+	readblock -> write[label="no"];
+	write -> writeblock;
+	writeblock -> writesub[label="yes"];
+	writesub -> todisk -> poll;
+	writeblock -> read[label="no"];
+	poll -> readready -> read;
+	poll -> writeready -> write;
+}
