@@ -63,7 +63,7 @@ main(int argc, char *argv[])
 {
 	struct memory_buffer mb = {{ARRSZ(mem), 0, 0}, mem};
 	struct file_buffer fb = {{-1, 0, 0}, -1};
-	struct pollfd pfds[2] = {{STDIN_FILENO, POLLIN, 0}, {STDOUT_FILENO, 0, 0}};
+	struct pollfd pfds[2] = {{STDIN_FILENO, POLLIN, 0}, {-1, POLLOUT, 0}};
 	if(argc != 2)
 	{
 		usage();
@@ -83,7 +83,7 @@ main(int argc, char *argv[])
 			perror("poll");
 			exit(EXIT_FAILURE);
 		}
-		else if(pfds[1].revents & (POLLOUT | POLLERR | POLLHUP | POLLNVAL))
+		else if(pfds[1].revents & POLLOUT)
 		{
 			if(buffer_data_available(&mb.buffer))
 			{
@@ -94,7 +94,10 @@ main(int argc, char *argv[])
 					exit(EXIT_FAILURE);
 				}
 				mb.buffer.consumed += w;
-				pfds[0].events = POLLIN;
+				if(w)
+				{
+					pfds[0].fd = 0;
+				}
 			}
 			else if(buffer_data_available(&fb.buffer))
 			{
@@ -118,18 +121,21 @@ main(int argc, char *argv[])
 					exit(EXIT_FAILURE);
 				}
 				fb.buffer.consumed += w;
-				pfds[0].events = POLLIN;
+				if(w)
+				{
+					pfds[0].fd = 0;
+				}
 			}
 			else
 			{
-				pfds[1].events = 0;
+				pfds[1].fd = -1;
 			}
 		}
-		else if(pfds[0].revents & (POLLIN | POLLERR | POLLHUP | POLLNVAL))
+		else if(pfds[0].revents & (POLLIN | POLLHUP))
 		{
 			if(!buffer_space_available(&fb.buffer))
 			{
-				pfds[0].events = 0;
+				pfds[0].fd = -1;
 			}
 			else if(!buffer_space_available(&mb.buffer) || buffer_data_available(&fb.buffer))
 			{
@@ -143,7 +149,8 @@ main(int argc, char *argv[])
 				}
 				if(r == 0)
 				{
-					pfds[0].events = 0;
+					pfds[0].fd = -1;
+					close(STDIN_FILENO);
 				}
 				if(w == -1)
 				{
@@ -162,7 +169,10 @@ main(int argc, char *argv[])
 					w += t;
 				}
 				fb.buffer.produced += w;
-				pfds[1].events = POLLOUT;
+				if(w)
+				{
+					pfds[1].fd = 1;
+				}
 			}
 			else
 			{
@@ -174,15 +184,19 @@ main(int argc, char *argv[])
 				}
 				if(r == 0)
 				{
-					pfds[0].events = 0;
+					pfds[0].fd = -1;
+					close(STDIN_FILENO);
 				}
 				mb.buffer.produced += r;
-				pfds[1].events = POLLOUT;
+				if(r)
+				{
+					pfds[1].fd = 1;
+				}
 			}
 		}
 		else
 		{
-			fprintf(stderr, "Unexpected poll result: n = %d, stdin.revents = %hx, stdout.revents = %hx\n", n, pfds[0].revents, pfds[1].revents);
+			fprintf(stderr, "Unexpected poll result: n = %d, stdin.revents = %hd, stdout.revents = %hd\n", n, pfds[0].revents, pfds[1].revents);
 			exit(EXIT_FAILURE);
 		}
 	} while(pfds[0].events || pfds[1].events);
