@@ -98,14 +98,13 @@ main(int argc, char *argv[])
 			else if(buffer_data_available(&fb.buffer))
 			{
 				int toread = ARRSZ(buf) < buffer_data_available(&fb.buffer) ? ARRSZ(buf) : buffer_data_available(&fb.buffer);
-				int r = lseek(fb.fd, buffer_consume_at(&fb.buffer), SEEK_SET);
-				int w = 0;
+				int w = lseek(fb.fd, buffer_consume_at(&fb.buffer), SEEK_SET);
+				int r = read(fb.fd, buf, toread);
 				if(r == -1)
 				{
 					perror("lseek");
 					exit(EXIT_FAILURE);
 				}
-				r = read(fb.fd, buf, toread);
 				if(r == -1)
 				{
 					perror("read");
