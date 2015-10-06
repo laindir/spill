@@ -1,4 +1,4 @@
-CFLAGS=-Wall -Wextra -pedantic -ansi -g
+CFLAGS=-Wall -Wextra -g
 DOT=dot
 
 all: spill
