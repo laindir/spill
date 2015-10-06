@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <poll.h>
 #include <fcntl.h>
+#include <errno.h>
 
 struct buffer
 {
@@ -64,9 +65,22 @@ main(int argc, char *argv[])
 	struct memory_buffer mb = {{ARRSZ(mem), 0, 0}, mem};
 	struct file_buffer fb = {{-1, 0, 0}, -1};
 	struct pollfd pfds[2] = {{STDIN_FILENO, POLLIN, 0}, {-1, POLLOUT, 0}};
+	int flags;
 	if(argc != 2)
 	{
 		usage();
+		exit(EXIT_FAILURE);
+	}
+	flags = fcntl(STDOUT_FILENO, F_GETFL);
+	if(flags == -1)
+	{
+		perror("fcntl");
+		exit(EXIT_FAILURE);
+	}
+	flags = fcntl(STDOUT_FILENO, F_SETFL, flags | O_NONBLOCK);
+	if(flags == -1)
+	{
+		perror("fcntl");
 		exit(EXIT_FAILURE);
 	}
 	fb.fd = open(argv[1], O_RDWR);
@@ -87,7 +101,13 @@ main(int argc, char *argv[])
 		{
 			if(buffer_data_available(&mb.buffer))
 			{
-				int w = write(STDOUT_FILENO, mb.data + buffer_consume_at(&mb.buffer), buffer_data_available(&mb.buffer));
+				int w;
+				char *offset = mb.data + buffer_consume_at(&mb.buffer);
+				int towrite = buffer_data_available(&mb.buffer);
+				while((w = write(STDOUT_FILENO, offset, towrite)) == -1 && errno == EAGAIN)
+				{
+					towrite >>= 1;
+				}
 				if(w == -1)
 				{
 					perror("write");
@@ -114,7 +134,10 @@ main(int argc, char *argv[])
 					perror("read");
 					exit(EXIT_FAILURE);
 				}
-				w = write(STDOUT_FILENO, buf, r);
+				while((w = write(STDOUT_FILENO, buf, r)) == -1 && errno == EAGAIN)
+				{
+					r >>= 1;
+				}
 				if(w == -1)
 				{
 					perror("write");
