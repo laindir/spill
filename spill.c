@@ -94,6 +94,7 @@ main(int argc, char *argv[])
 					exit(EXIT_FAILURE);
 				}
 				mb.buffer.consumed += w;
+				pfds[0].events = POLLIN;
 			}
 			else if(buffer_data_available(&fb.buffer))
 			{
