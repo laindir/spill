@@ -116,7 +116,7 @@ main(int argc, char *argv[])
 				mb.buffer.consumed += w;
 				if(w)
 				{
-					pfds[0].fd = 0;
+					pfds[0].fd = pfds[0].fd == -2 ? -2 : 0;
 				}
 			}
 			else if(buffer_data_available(&fb.buffer))
@@ -146,7 +146,7 @@ main(int argc, char *argv[])
 				fb.buffer.consumed += w;
 				if(w)
 				{
-					pfds[0].fd = 0;
+					pfds[0].fd = pfds[0].fd == -2 ? -2 : 0;
 				}
 			}
 			else
@@ -172,7 +172,7 @@ main(int argc, char *argv[])
 				}
 				if(r == 0)
 				{
-					pfds[0].fd = -1;
+					pfds[0].fd = -2;
 					close(STDIN_FILENO);
 				}
 				if(w == -1)
@@ -207,7 +207,7 @@ main(int argc, char *argv[])
 				}
 				if(r == 0)
 				{
-					pfds[0].fd = -1;
+					pfds[0].fd = -2;
 					close(STDIN_FILENO);
 				}
 				mb.buffer.produced += r;
