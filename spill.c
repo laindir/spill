@@ -111,15 +111,11 @@ main(int argc, char *argv[])
 					perror("read");
 					exit(EXIT_FAILURE);
 				}
-				while(r - w)
+				w = write(STDOUT_FILENO, buf, r);
+				if(w == -1)
 				{
-					int t = write(STDOUT_FILENO, buf + w, r - w);
-					if(t == -1)
-					{
-						perror("write");
-						exit(EXIT_FAILURE);
-					}
-					w += t;
+					perror("write");
+					exit(EXIT_FAILURE);
 				}
 				fb.buffer.consumed += w;
 				pfds[0].events = POLLIN;
