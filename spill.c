@@ -44,7 +44,7 @@ struct file_buffer
 struct memory_buffer
 {
 	struct buffer buffer;
-	void *data;
+	char *data;
 };
 
 void
@@ -87,7 +87,7 @@ main(int argc, char *argv[])
 		{
 			if(buffer_data_available(&mb.buffer))
 			{
-				int w = write(STDOUT_FILENO, mb.data, buffer_data_available(&mb.buffer));
+				int w = write(STDOUT_FILENO, mb.data + buffer_consume_at(&mb.buffer), buffer_data_available(&mb.buffer));
 				if(w == -1)
 				{
 					perror("write");
@@ -164,7 +164,7 @@ main(int argc, char *argv[])
 			}
 			else
 			{
-				int r = read(STDIN_FILENO, mb.data, buffer_space_available(&mb.buffer));
+				int r = read(STDIN_FILENO, mb.data + buffer_produce_at(&mb.buffer), buffer_space_available(&mb.buffer));
 				if(r == -1)
 				{
 					perror("read");
