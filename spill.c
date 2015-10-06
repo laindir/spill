@@ -14,12 +14,12 @@ struct buffer
 
 int buffer_consume_at(const struct buffer *b)
 {
-	return b->consumed % b->size;
+	return b->size ? b->consumed % b->size : 0;
 }
 
 int buffer_produce_at(const struct buffer *b)
 {
-	return b->produced % b->size;
+	return b->size ? b->produced % b->size : 0;
 }
 
 unsigned long buffer_data_available(const struct buffer *b)
