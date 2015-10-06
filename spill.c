@@ -133,9 +133,9 @@ main(int argc, char *argv[])
 			}
 			else if(!buffer_space_available(&mb.buffer) || buffer_data_available(&fb.buffer))
 			{
-				int toread = ARRSZ(buf) < buffer_data_available(&mb.buffer) ? ARRSZ(buf) : buffer_data_available(&mb.buffer);
+				int toread = ARRSZ(buf) < buffer_space_available(&fb.buffer) ? ARRSZ(buf) : buffer_space_available(&fb.buffer);
 				int r = read(STDIN_FILENO, buf, toread);
-				int w = 0;
+				int w = lseek(fb.fd, buffer_produce_at(&fb.buffer), SEEK_SET);
 				if(r == -1)
 				{
 					perror("read");
@@ -145,6 +145,12 @@ main(int argc, char *argv[])
 				{
 					pfds[0].events = 0;
 				}
+				if(w == -1)
+				{
+					perror("lseek");
+					exit(EXIT_FAILURE);
+				}
+				w = 0;
 				while(r - w)
 				{
 					int t = write(fb.fd, buf + w, r - w);
