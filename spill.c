@@ -83,7 +83,7 @@ main(int argc, char *argv[])
 			perror("poll");
 			exit(EXIT_FAILURE);
 		}
-		else if(pfds[1].revents & POLLOUT)
+		else if(pfds[1].revents & (POLLOUT | POLLERR | POLLHUP | POLLNVAL))
 		{
 			if(buffer_data_available(&mb.buffer))
 			{
@@ -125,7 +125,7 @@ main(int argc, char *argv[])
 				pfds[1].events = 0;
 			}
 		}
-		else if(pfds[0].revents & POLLIN)
+		else if(pfds[0].revents & (POLLIN | POLLERR | POLLHUP | POLLNVAL))
 		{
 			if(!buffer_space_available(&fb.buffer))
 			{
