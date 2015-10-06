@@ -304,7 +304,6 @@ main(int argc, char *argv[])
 		}
 		else
 		{
-			fprintf(stderr, "Unexpected poll result: n = %d, stdin.revents = %hd, stdout.revents = %hd\n", n, pfds[0].revents, pfds[1].revents);
 			exit(EXIT_FAILURE);
 		}
 	} while(pfds[0].fd >= 0 || pfds[1].fd >= 0);
