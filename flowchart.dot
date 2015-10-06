@@ -1,13 +1,54 @@
-digraph {
+strict digraph {
 	label="Spill"
-	read -> readblock;
-	readblock -> readsub[label="yes"];
-	readsub -> poll;
-	readblock -> write[label="no"];
-	write -> writeblock;
-	writeblock -> writesub[label="yes"];
-	writesub -> todisk -> poll;
-	writeblock -> read[label="no"];
-	poll -> readready -> read;
-	poll -> writeready -> write;
+
+	node [shape="diamond"]
+		which;
+		is_data_in_mem;
+		is_data_on_disk_writing
+		is_disk_full;
+		is_mem_full_or_data_on_disk;
+		EOF_for_disk;
+		EOF_for_mem;
+		any_sub;
+	node [shape="parallelogram"]
+		write;
+		read_from_disk;
+		read_for_disk;
+		write_to_disk;
+		read_to_mem;
+	node [shape="rectangle"]
+		poll;
+		sub_read;
+		unsub_write;
+		unsub_read;
+		sub_write;
+	node [style="rounded"]
+		start;
+		end;
+
+	start -> sub_read;
+	poll -> which;
+	which -> is_data_in_mem[label="stdout"];
+		is_data_in_mem -> write[label="yes"];
+		is_data_in_mem -> is_data_on_disk_writing[label="no"];
+		is_data_on_disk_writing -> read_from_disk[label="yes"];
+			read_from_disk -> write -> sub_read -> poll;
+		is_data_on_disk_writing -> unsub_write[label="no"];
+			unsub_write -> any_sub;
+	which -> is_disk_full[label="stdin"];
+		is_disk_full -> unsub_read[label="yes"];
+			unsub_read -> any_sub;
+		is_disk_full -> is_mem_full_or_data_on_disk[label="no"];
+		is_mem_full_or_data_on_disk -> read_for_disk[label="yes"];
+			read_for_disk -> EOF_for_disk;
+			EOF_for_disk -> write_to_disk[label="no"];
+				write_to_disk -> sub_write -> poll;
+			EOF_for_disk -> unsub_read[label="yes"];
+		is_mem_full_or_data_on_disk -> read_to_mem[label="no"];
+			read_to_mem -> EOF_for_mem;
+			EOF_for_mem -> unsub_read[label="yes"];
+			EOF_for_mem -> sub_write[label="no"];
+			sub_write -> poll;
+	any_sub -> end[label="no"];
+	any_sub -> poll[label="yes"];
 }
